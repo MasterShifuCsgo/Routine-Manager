@@ -186,7 +186,30 @@ void switchLocations(editor &ed) {
   ed.switch_locations(line_num1, line_num2);
 }
 void saveToFile(editor &ed) {
+
+  // shows the user what .txt files it can save to.
+  std::filesystem::path working_directory = ".";
   std::string fileName;
+  try {
+    int i = 1;
+
+    std::cout << "all .txt files in the directory\n";
+    for (const auto &entry :
+         std::filesystem::directory_iterator(working_directory)) {
+
+      std::string fileName = entry.path().filename().string();
+      if (entry.is_regular_file() &&
+          fileName.substr(fileName.size() - 4) == ".txt") {
+        std::cout << i << ". " << fileName << '\n';
+        i++;
+      }
+    }
+  } catch (const std::filesystem::filesystem_error &e) {
+    std::cerr << "Filesystem Error: " << e.what() << std::endl;
+  } catch (const std::exception &e) {
+    std::cerr << "General exception: " << e.what() << std::endl;
+  }
+
   while (true) {
     std::cin.ignore();
     // check if user has loaded a file alreay.
