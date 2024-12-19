@@ -1,9 +1,9 @@
-#include <array> // for std::array
-#include <filesystem>
-#include <fstream>
+#include <array>      // for std::array
+#include <filesystem> // to show .txt files in directory
+#include <fstream>    // file manipulation
 #include <functional> // for std::function
-#include <iostream>
-#include <limits> // for numeric_limits
+#include <iostream>   // showing text on the screen and cerr.
+#include <limits>     // for numeric_limits
 #include <string>
 #include <unordered_map>
 #include <vector>
