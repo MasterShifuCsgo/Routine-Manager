@@ -27,6 +27,7 @@ public:
       }
     }
   }
+
   void add(const std::string &item, int &line) {
 
     if (item.size() <= 1) {
@@ -41,8 +42,10 @@ public:
     }
 
     endresult.insert(endresult.begin() + line, item);
+    system("clear");
     std::cout << "\nItem \'" << item << "\' added\n";
   }
+
   void remove(const int &line_num) {
     if (line_num <= 0 || line_num >= endresult.size()) {
       std::cout << "Error: Invalid line number.\n";
@@ -50,24 +53,30 @@ public:
     }
     std::string temp = endresult[line_num];
     endresult.erase(endresult.begin() + line_num);
+    system("clear");
     std::cout << "\nRemoved: " << temp << '\n';
   }
+
   void replace(const int &line_num, const std::string &item) {
     endresult[line_num] = item;
+    system("clear");
     std::cout << "\nreplaced item: " << item << " at line " << line_num << '\n';
   }
+
   void switch_locations(const int &li1, const int &li2) {
 
     if (li1 >= 0 && li1 < endresult[li1].size() && li2 >= 0 &&
         li2 < endresult[li2].size()) {
 
       std::swap(endresult[li1], endresult[li2]);
+      system("clear");
       std::cout << "\nswtiched locations. \n";
     } else {
+      system("clear");
       std::cout << "switching failed. \n";
     }
 
-    std::cout << "line 1: " << li1 << "\n line 2: " << li2 << '\n';
+    std::cout << "line 1: " << li1 << "\nline 2: " << li2 << '\n';
   }
 };
 
@@ -91,7 +100,7 @@ constexpr std::array<const char *, 6> actions = {
 editor ed = editor(/* dummydata */); // enter dummy data here.
 
 int main() {
-
+  system("clear");
   // user terminal
   while (true) {
     std::cout << "--Start--\n";
@@ -148,15 +157,23 @@ int getValidatedLineNumber() {
   }
   return line_num;
 }
+
 void addItem(editor &ed) {
   int line_num;
   std::cin.ignore();
   std::string item;
   std::cout << "What would you like to add: ";
   getline(std::cin, item);
-  line_num = getValidatedLineNumber();
+  std::cout << "\nitem will be forwarded to the specified index.\n";
+
+  if (ed.endresult.size() == 0) {
+    line_num = 0;
+  } else {
+    line_num = getValidatedLineNumber();
+  }
   ed.add(item, line_num);
 }
+
 void removeItem(editor &ed) {
   int line_num;
   std::cout << "Enter the line you would like to remove: ";
@@ -164,6 +181,7 @@ void removeItem(editor &ed) {
   system("clear");
   ed.remove(line_num);
 }
+
 void replaceItem(editor &ed) {
   int line_num;
   std::cin.ignore();
@@ -176,6 +194,7 @@ void replaceItem(editor &ed) {
   system("clear");
   ed.replace(line_num, item);
 }
+
 void switchLocations(editor &ed) {
   int line_num1, line_num2;
   std::cout << "Enter line 1 location: ";
@@ -185,6 +204,7 @@ void switchLocations(editor &ed) {
   system("clear");
   ed.switch_locations(line_num1, line_num2);
 }
+
 void saveToFile(editor &ed) {
 
   // shows the user what .txt files it can save to.
@@ -218,12 +238,18 @@ void saveToFile(editor &ed) {
     }
     std::cout << "Enter the file name you would like to save to: ";
 
-    getline(std::cin, fileName);
+    if (!(std::cin >> fileName)) {
+      std::cin.clear();
+      std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      std::cout << "Please enter a filename\n";
+      continue;
+    }
 
     if (fileName.size() < 4 && fileName.substr(fileName.size() - 4) != ".txt") {
       std::cout << "Please enter a filename with \'.txt\' at the end.";
       continue;
     }
+    break;
   }
 
   std::ofstream saveFile(fileName, std::ios::out);
@@ -237,15 +263,16 @@ void saveToFile(editor &ed) {
   system("clear");
   std::cout << "Save Completed\n";
 }
+
 void loadFromFile(editor &ed) {
 
   system("clear");
   // printing all the current .txt files in the current directory
   std::filesystem::path working_directory = ".";
   std::string fileName;
+  std::vector<std::string> foundTextFiles{};
   try {
     int i = 1;
-
     std::cout << "all .txt files in the directory\n";
     for (const auto &entry :
          std::filesystem::directory_iterator(working_directory)) {
@@ -253,6 +280,7 @@ void loadFromFile(editor &ed) {
       std::string fileName = entry.path().filename().string();
       if (entry.is_regular_file() &&
           fileName.substr(fileName.size() - 4) == ".txt") {
+        foundTextFiles.push_back(fileName);
         std::cout << i << ". " << fileName << '\n';
         i++;
       }
@@ -263,19 +291,18 @@ void loadFromFile(editor &ed) {
     std::cerr << "General exception: " << e.what() << std::endl;
   }
 
+  int line_num;
   while (true) {
     std::cin.ignore();
-    std::string filename;
-    std::cout << "File format should be .txt\n";
-    std::cout << "Enter the file name you would like to load from: ";
-    getline(std::cin, filename);
+    std::cout << "Enter the file index you would like to load from: ";
+    line_num = getValidatedLineNumber();
 
-    if (filename.size() < 4 || filename.substr(filename.size() - 4) != ".txt") {
-      std::cout << "Please enter a file with the suffix .txt\n";
+    if (line_num >= foundTextFiles.size() || line_num < 0) {
+      std::cout << "Please enter a valid index\n";
       continue;
     }
 
-    std::ifstream loadFile(filename);
+    std::ifstream loadFile(foundTextFiles[line_num]);
     if (!loadFile.is_open()) {
       std::cout << "Error: Could not open file.\n";
       continue;
@@ -287,7 +314,7 @@ void loadFromFile(editor &ed) {
       ed.endresult.push_back(line);
     }
 
-    ed.LoadedFromFile = filename; // already appends .txt
+    ed.LoadedFromFile = foundTextFiles[line_num];
     system("clear");
     std::cout << "Completed Loading.\n";
     break;
